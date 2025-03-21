@@ -11,14 +11,14 @@ const TRANSITION_DURATION = 300
 const TRANSITION_DELAY = 50
 
 const isVisible = ref(false)
-const showSettings = ref(false)
+const activeTool = ref<typeof tools[0] | null>(null)
 const isSettingsClosing = ref(false)
 
 const tools = [
   { title: 'Show', icon: 'i-iconamoon-eye' },
   { title: 'Comment', icon: 'i-iconamoon-comment-add' },
-  // { title: 'Content', icon: 'i-iconamoon-file-document' },
-  // { title: 'Settings', icon: 'i-iconamoon-settings' },
+  { title: 'Content', icon: 'i-iconamoon-file-document' },
+  { title: 'Settings', icon: 'i-iconamoon-settings' },
   { title: 'Close', icon: 'i-iconamoon-close' },
 ]
 
@@ -37,7 +37,7 @@ const toolsContainerHeight = computed(() =>
 function toggleVisibility() {
   isVisible.value = !isVisible.value
   if (!isVisible.value) {
-    showSettings.value = false
+    activeTool.value = null
   }
 }
 
@@ -47,14 +47,14 @@ function getTransitionDelay(index: number) {
 
 function handleToolClick(tool: typeof tools[0]) {
   if (tool.title === 'Settings') {
-    if (!showSettings.value) {
-      showSettings.value = true
+    if (!activeTool.value) {
+      activeTool.value = tool
       isSettingsClosing.value = false
     }
     else {
       isSettingsClosing.value = true
       setTimeout(() => {
-        showSettings.value = false
+        activeTool.value = null
         isSettingsClosing.value = false
       }, 300)
     }
@@ -67,7 +67,7 @@ function handleToolClick(tool: typeof tools[0]) {
 function handleSettingsClose() {
   isSettingsClosing.value = true
   setTimeout(() => {
-    showSettings.value = false
+    activeTool.value = null
     isSettingsClosing.value = false
   }, 300)
 }
@@ -101,7 +101,7 @@ function handleSettingsClose() {
         <button
           v-for="(tool, index) in tools"
           :key="tool.icon"
-          class="relative bg-dark-500 shrink-0 rounded-full w-9 h-9 border-none inline-flex items-center justify-center cursor-pointer text-white text-lg transform origin-right relative group"
+          class="relative shrink-0 rounded-full w-9 h-9 border-none inline-flex items-center justify-center cursor-pointer text-lg transform origin-right relative group"
           :class="[
             tool.title === 'Close'
               ? 'hover:bg-red-500 hover:text-white'
@@ -109,6 +109,9 @@ function handleSettingsClose() {
             isVisible
               ? 'opacity-100 translate-x-0'
               : 'opacity-0 translate-x-4 pointer-events-none',
+            activeTool && tool.title === activeTool.title
+              ? 'bg-white text-dark-900'
+              : 'bg-dark-500 text-white',
           ]"
           :style="{
             transition: `all ${TRANSITION_DURATION}ms ease-in-out ${getTransitionDelay(index)}`,
@@ -124,7 +127,7 @@ function handleSettingsClose() {
     </div>
 
     <Settings
-      v-if="showSettings"
+      v-if="activeTool?.title === 'Settings'"
       :is-closing="isSettingsClosing"
       @close="handleSettingsClose"
     />

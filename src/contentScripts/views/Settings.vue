@@ -10,19 +10,18 @@ const emit = defineEmits<{
 const isVisible = ref(false)
 
 const settings = ref({
-  theme: 'dark',
-  position: 'right',
-  animation: true,
+  project: null,
+  page: null,
 })
 
-const themes = [
-  { value: 'dark', label: 'Dark' },
-  { value: 'light', label: 'Light' },
+const projects = [
+  { value: 'project1', label: 'Project 1' },
+  { value: 'project2', label: 'Project 2' },
 ]
 
-const positions = [
-  { value: 'right', label: 'Right' },
-  { value: 'left', label: 'Left' },
+const pages = [
+  { value: 'page1', label: 'Page 1' },
+  { value: 'page2', label: 'Page 2' },
 ]
 
 onMounted(() => {
@@ -40,91 +39,24 @@ watch(() => props.isClosing, (newValue: boolean) => {
     }, 300)
   }
 })
-
-function closeSettings() {
-  isVisible.value = false
-  setTimeout(() => {
-    emit('close')
-  }, 300)
-}
 </script>
 
 <template>
   <div
-    class="un-fixed un-right-22 un-w-64 un-bg-dark-900 un-rounded-2xl un-shadow-lg un-p-4 un-z-100 un-transform un-transition-all un-duration-300 un-ease-in-out"
+    class="fixed right-22 w-64 bg-dark-900 rounded-2xl shadow-lg p-4 z-100 transform transition-all duration-300 ease-in-out"
     :class="[
       isVisible
-        ? 'un-opacity-100 un-translate-x-0'
-        : 'un-opacity-0 un-translate-x-4',
+        ? 'opacity-100 translate-x-0'
+        : 'opacity-0 translate-x-4',
     ]"
   >
-    <div class="un-flex un-justify-between un-items-center un-mb-4">
-      <h3 class="un-text-white un-text-lg un-font-medium">
-        Settings
-      </h3>
-      <button
-        class="un-text-gray-400 hover:un-text-white un-transition-colors"
-        @click="closeSettings"
-      >
-        <div class="i-iconamoon-close" />
-      </button>
+    <div class="text-white text-lg font-medium mb-4 text-center block">
+      Settings
     </div>
 
-    <div class="un-space-y-4">
-      <!-- Theme Setting -->
-      <div>
-        <label class="un-block un-text-sm un-text-gray-400 un-mb-2">
-          Theme
-        </label>
-        <select
-          v-model="settings.theme"
-          class="un-w-full un-bg-dark-800 un-text-white un-rounded-md un-px-3 un-py-2 un-border un-border-dark-700 focus:un-outline-none focus:un-border-[#ffca13]"
-        >
-          <option
-            v-for="theme in themes"
-            :key="theme.value"
-            :value="theme.value"
-          >
-            {{ theme.label }}
-          </option>
-        </select>
-      </div>
-
-      <!-- Position Setting -->
-      <div>
-        <label class="un-block un-text-sm un-text-gray-400 un-mb-2">
-          Position
-        </label>
-        <select
-          v-model="settings.position"
-          class="un-w-full un-bg-dark-800 un-text-white un-rounded-md un-px-3 un-py-2 un-border un-border-dark-700 focus:un-outline-none focus:un-border-[#ffca13]"
-        >
-          <option
-            v-for="position in positions"
-            :key="position.value"
-            :value="position.value"
-          >
-            {{ position.label }}
-          </option>
-        </select>
-      </div>
-
-      <!-- Animation Setting -->
-      <div class="un-flex un-items-center un-justify-between">
-        <label class="un-text-sm un-text-gray-400">
-          Enable Animation
-        </label>
-        <button
-          class="un-relative un-inline-flex un-h-6 un-w-11 un-flex-shrink-0 un-cursor-pointer un-rounded-full un-border-2 un-border-transparent un-bg-dark-700 un-transition-colors un-duration-200 un-ease-in-out focus:un-outline-none focus:un-ring-2 focus:un-ring-[#ffca13] focus:un-ring-offset-2"
-          :class="{ 'un-bg-[#ffca13]': settings.animation }"
-          @click="settings.animation = !settings.animation"
-        >
-          <span
-            class="un-pointer-events-none un-inline-block un-h-5 un-w-5 un-transform un-rounded-full un-bg-white un-shadow un-ring-0 un-transition un-duration-200 un-ease-in-out"
-            :class="{ 'un-translate-x-5': settings.animation }"
-          />
-        </button>
-      </div>
+    <div class="space-y-4">
+      <Combobox v-model="settings.project" :items="projects" display-key="label" placeholder="Select Project" />
+      <Combobox v-model="settings.page" :items="pages" display-key="label" placeholder="Select Page" />
     </div>
   </div>
 </template>
