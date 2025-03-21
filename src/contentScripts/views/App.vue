@@ -1,31 +1,132 @@
 <script setup lang="ts">
-import { useToggle } from '@vueuse/core'
+import { sendMessage } from 'webext-bridge/content-script'
+import icon from '../../assets/q.svg'
+import Settings from './Settings.vue'
 import 'uno.css'
 
-const [show, toggle] = useToggle(false)
+// Constants
+const BUTTON_SIZE = 36 // 9 * 4
+const GAP_SIZE = 6 // 1.5 * 4
+const TRANSITION_DURATION = 300
+const TRANSITION_DELAY = 50
+
+const isVisible = ref(false)
+const showSettings = ref(false)
+const isSettingsClosing = ref(false)
+
+const tools = [
+  { title: 'Show', icon: 'i-iconamoon-eye' },
+  { title: 'Comment', icon: 'i-iconamoon-comment-add' },
+  // { title: 'Content', icon: 'i-iconamoon-file-document' },
+  // { title: 'Settings', icon: 'i-iconamoon-settings' },
+  { title: 'Close', icon: 'i-iconamoon-close' },
+]
+
+const containerHeight = computed(() =>
+  isVisible.value
+    ? BUTTON_SIZE + GAP_SIZE + (BUTTON_SIZE + GAP_SIZE) * tools.length - GAP_SIZE
+    : BUTTON_SIZE,
+)
+
+const toolsContainerHeight = computed(() =>
+  isVisible.value
+    ? containerHeight.value - BUTTON_SIZE
+    : 0,
+)
+
+function toggleVisibility() {
+  isVisible.value = !isVisible.value
+  if (!isVisible.value) {
+    showSettings.value = false
+  }
+}
+
+function getTransitionDelay(index: number) {
+  return `${index * TRANSITION_DELAY}ms`
+}
+
+function handleToolClick(tool: typeof tools[0]) {
+  if (tool.title === 'Settings') {
+    if (!showSettings.value) {
+      showSettings.value = true
+      isSettingsClosing.value = false
+    }
+    else {
+      isSettingsClosing.value = true
+      setTimeout(() => {
+        showSettings.value = false
+        isSettingsClosing.value = false
+      }, 300)
+    }
+  }
+  else if (tool.title === 'Close') {
+    sendMessage('close')
+  }
+}
+
+function handleSettingsClose() {
+  isSettingsClosing.value = true
+  setTimeout(() => {
+    showSettings.value = false
+    isSettingsClosing.value = false
+  }, 300)
+}
 </script>
 
 <template>
-  <div class="fixed right-0 bottom-0 m-5 z-100 flex items-end font-sans select-none leading-1em">
+  <div class="fixed inset-y-0 right-0 my-auto mr-5 w-max h-max z-100 flex items-center font-sans select-none leading-1em">
     <div
-      v-show="show"
-      class="bg-white text-gray-800 rounded-lg shadow w-max h-min"
-      p="x-4 y-2"
-      m="y-auto r-2"
-      transition="opacity duration-300"
-      :class="show ? 'opacity-100' : 'opacity-0'"
+      class="flex flex-col gap-1.5 rounded-full p-1.5 bg-dark-900"
+      :style="{
+        height: `${containerHeight}px`,
+        transition: `height ${TRANSITION_DURATION}ms ease-in-out`,
+      }"
     >
-      <h1 class="text-lg">
-        Vitesse WebExt
-      </h1>
-      <SharedSubtitle />
+      <button
+        class="bg-[#ffca13] border-none shrink-0 inline-flex items-center justify-center rounded-full w-9 h-9 cursor-pointer hover:opacity-80"
+        :style="{
+          transition: `opacity ${TRANSITION_DURATION}ms ease-in-out`,
+        }"
+        @click="toggleVisibility"
+      >
+        <img :src="icon" class="w-4 h-4">
+      </button>
+      <div
+        class="flex flex-col gap-1.5 overflow-hidden"
+        :style="{
+          height: `${toolsContainerHeight}px`,
+          transition: `height ${TRANSITION_DURATION}ms ease-in-out`,
+        }"
+      >
+        <button
+          v-for="(tool, index) in tools"
+          :key="tool.icon"
+          class="relative bg-dark-500 shrink-0 rounded-full w-9 h-9 border-none inline-flex items-center justify-center cursor-pointer text-white text-lg transform origin-right relative group"
+          :class="[
+            tool.title === 'Close'
+              ? 'hover:bg-red-500 hover:text-white'
+              : 'hover:bg-white hover:text-dark-900',
+            isVisible
+              ? 'opacity-100 translate-x-0'
+              : 'opacity-0 translate-x-4 pointer-events-none',
+          ]"
+          :style="{
+            transition: `all ${TRANSITION_DURATION}ms ease-in-out ${getTransitionDelay(index)}`,
+          }"
+          @click="handleToolClick(tool)"
+        >
+          <div :class="tool.icon" />
+          <div class="absolute right-full mr-2 px-2 py-1 bg-dark-800 text-white text-sm rounded-md whitespace-nowrap opacity-0 translate-x-2 transition-all duration-200 ease-in-out group-hover:opacity-100 group-hover:translate-x-0">
+            {{ tool.title }}
+          </div>
+        </button>
+      </div>
     </div>
-    <button
-      class="flex w-10 h-10 rounded-full shadow cursor-pointer border-none"
-      bg="teal-600 hover:teal-700"
-      @click="toggle()"
-    >
-      <pixelarticons-power class="block m-auto text-white text-lg" />
-    </button>
+
+    <Settings
+      v-if="showSettings"
+      :is-closing="isSettingsClosing"
+      @close="handleSettingsClose"
+    />
   </div>
 </template>

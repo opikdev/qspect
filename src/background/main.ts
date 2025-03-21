@@ -1,3 +1,5 @@
+import { onMessage } from 'webext-bridge/background'
+
 // only on dev mode
 if (import.meta.hot) {
   // @ts-expect-error for background HMR
@@ -76,6 +78,33 @@ browser.action.onClicked.addListener(async (tab) => {
 
 browser.tabs.onRemoved.addListener((tabId) => {
   injectedTabs.delete(tabId)
+})
+
+onMessage('close', async () => {
+  try {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true })
+    if (tab.id) {
+      await browser.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+          const root = document.querySelector('#qspect')
+          if (root) {
+            root.remove()
+          }
+        },
+      })
+
+      await browser.action.setBadgeText({
+        tabId: tab.id,
+        text: '',
+      })
+
+      injectedTabs.delete(tab.id)
+    }
+  }
+  catch (error) {
+    console.error('Failed to close content script:', error)
+  }
 })
 
 // // remove or turn this off if you don't use side panel
