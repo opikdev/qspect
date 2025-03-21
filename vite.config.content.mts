@@ -30,6 +30,7 @@ export default defineConfig({
       output: {
         entryFileNames: 'index.global.js',
         extend: true,
+        assetFileNames: 'style.css',
       },
     },
   },
