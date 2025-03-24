@@ -13,11 +13,13 @@ const TRANSITION_DELAY = 50
 const isVisible = ref(false)
 const activeTool = ref<typeof tools[0] | null>(null)
 const isSettingsClosing = ref(false)
+const hoveredIndex = ref<number | null>(null)
 
 const tools = [
-  { title: 'Show', icon: 'i-iconamoon-eye' },
+  { title: 'Visual Check', icon: 'i-iconamoon-eye' },
   { title: 'Comment', icon: 'i-iconamoon-comment-add' },
-  { title: 'Content', icon: 'i-iconamoon-file-document' },
+  { title: 'Standardization Check', icon: 'i-iconamoon-file-check' },
+  { title: 'Content Check', icon: 'i-iconamoon-file-document' },
   { title: 'Settings', icon: 'i-iconamoon-settings' },
   { title: 'Close', icon: 'i-iconamoon-close' },
 ]
@@ -60,7 +62,7 @@ function handleToolClick(tool: typeof tools[0]) {
     }
   }
   else if (tool.title === 'Close') {
-    sendMessage('close')
+    sendMessage('close', { data: {} })
   }
 }
 
@@ -70,6 +72,14 @@ function handleSettingsClose() {
     activeTool.value = null
     isSettingsClosing.value = false
   }, 300)
+}
+
+function handleMouseEnter(index: number) {
+  hoveredIndex.value = index
+}
+
+function handleMouseLeave() {
+  hoveredIndex.value = null
 }
 </script>
 
@@ -91,38 +101,69 @@ function handleSettingsClose() {
       >
         <img :src="icon" class="w-4 h-4">
       </button>
-      <div
-        class="flex flex-col gap-1.5 overflow-hidden"
-        :style="{
-          height: `${toolsContainerHeight}px`,
-          transition: `height ${TRANSITION_DURATION}ms ease-in-out`,
-        }"
-      >
-        <button
-          v-for="(tool, index) in tools"
-          :key="tool.icon"
-          class="relative shrink-0 rounded-full w-9 h-9 border-none inline-flex items-center justify-center cursor-pointer text-lg transform origin-right relative group"
-          :class="[
-            tool.title === 'Close'
-              ? 'hover:bg-red-500 hover:text-white'
-              : 'hover:bg-white hover:text-dark-900',
-            isVisible
-              ? 'opacity-100 translate-x-0'
-              : 'opacity-0 translate-x-4 pointer-events-none',
-            activeTool && tool.title === activeTool.title
-              ? 'bg-white text-dark-900'
-              : 'bg-dark-500 text-white',
-          ]"
-          :style="{
-            transition: `all ${TRANSITION_DURATION}ms ease-in-out ${getTransitionDelay(index)}`,
-          }"
-          @click="handleToolClick(tool)"
-        >
-          <div :class="tool.icon" />
-          <div class="absolute right-full mr-2 px-2 py-1 bg-dark-800 text-white text-sm rounded-md whitespace-nowrap opacity-0 translate-x-2 transition-all duration-200 ease-in-out group-hover:opacity-100 group-hover:translate-x-0">
-            {{ tool.title }}
+
+      <div class="relative">
+        <div class="absolute inset-0 pointer-events-none">
+          <div
+            v-for="(tool, index) in tools"
+            :key="`tooltip-${tool.icon}`"
+            class="absolute pointer-events-none"
+            :style="{
+              top: `${index * (BUTTON_SIZE + GAP_SIZE)}px`,
+              left: 0,
+              width: '100%',
+              height: `${BUTTON_SIZE}px`,
+            }"
+          >
+            <div
+              class="absolute right-full top-1/2 -translate-y-1/2 mr-2 px-2 py-1 bg-dark-800 text-white text-sm rounded-md whitespace-nowrap transition-all duration-200 ease-in-out z-50"
+              :class="[
+                isVisible && hoveredIndex === index
+                  ? 'opacity-100 translate-x-0'
+                  : 'opacity-0 translate-x-2',
+              ]"
+            >
+              {{ tool.title }}
+            </div>
           </div>
-        </button>
+        </div>
+
+        <div
+          class="flex flex-col gap-1.5 overflow-hidden"
+          :style="{
+            height: `${toolsContainerHeight}px`,
+            transition: `height ${TRANSITION_DURATION}ms ease-in-out`,
+          }"
+        >
+          <div
+            v-for="(tool, index) in tools"
+            :key="tool.icon"
+            class="relative"
+          >
+            <button
+              class="relative shrink-0 rounded-full w-9 h-9 border-none inline-flex items-center justify-center cursor-pointer text-lg transform origin-right"
+              :class="[
+                tool.title === 'Close'
+                  ? 'hover:bg-red-500 hover:text-white'
+                  : 'hover:bg-white hover:text-dark-900',
+                isVisible
+                  ? 'opacity-100 translate-x-0'
+                  : 'opacity-0 translate-x-4 pointer-events-none',
+                activeTool && tool.title === activeTool.title
+                  ? 'bg-white text-dark-900'
+                  : 'bg-dark-500 text-white',
+              ]"
+              :style="{
+                transition: `all ${TRANSITION_DURATION}ms ease-in-out ${getTransitionDelay(index)}`,
+              }"
+              @click="handleToolClick(tool)"
+              @mouseenter="handleMouseEnter(index)"
+              @mouseleave="handleMouseLeave"
+            >
+              <div :class="tool.icon" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
