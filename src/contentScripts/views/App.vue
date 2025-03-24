@@ -14,10 +14,11 @@ const isVisible = ref(false)
 const activeTool = ref<typeof tools[0] | null>(null)
 const isSettingsClosing = ref(false)
 const hoveredIndex = ref<number | null>(null)
+const isInitialLoad = ref(true)
 
 const tools = [
-  { title: 'Visual Check', icon: 'i-iconamoon-eye' },
-  { title: 'Comment', icon: 'i-iconamoon-comment-add' },
+  { title: 'UI Check', icon: 'i-iconamoon-eye' },
+  { title: 'UI Feedback', icon: 'i-iconamoon-comment-add' },
   { title: 'Standardization Check', icon: 'i-iconamoon-file-check' },
   { title: 'Content Check', icon: 'i-iconamoon-file-document' },
   { title: 'Settings', icon: 'i-iconamoon-settings' },
@@ -41,6 +42,7 @@ function toggleVisibility() {
   if (!isVisible.value) {
     activeTool.value = null
   }
+  isInitialLoad.value = false
 }
 
 function getTransitionDelay(index: number) {
@@ -81,6 +83,12 @@ function handleMouseEnter(index: number) {
 function handleMouseLeave() {
   hoveredIndex.value = null
 }
+
+onMounted(() => {
+  setTimeout(() => {
+    isInitialLoad.value = false
+  }, 500)
+})
 </script>
 
 <template>
@@ -116,8 +124,11 @@ function handleMouseLeave() {
             }"
           >
             <div
-              class="absolute right-full top-1/2 -translate-y-1/2 mr-2 px-2 py-1 bg-dark-800 text-white text-sm rounded-md whitespace-nowrap transition-all duration-200 ease-in-out z-50"
+              class="absolute right-full top-1/2 -translate-y-1/2 mr-2 px-2 py-1 bg-dark-800 text-white text-sm rounded-md whitespace-nowrap z-50"
               :class="[
+                !isInitialLoad
+                  ? 'transition-all duration-200 ease-in-out'
+                  : '',
                 isVisible && hoveredIndex === index
                   ? 'opacity-100 translate-x-0'
                   : 'opacity-0 translate-x-2',
